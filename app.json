@@ -1,0 +1,45 @@
+{
+  "expo": {
+    "name": "BreakCoach",
+    "slug": "break-coach",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "breakcoach",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#0b0b12"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.breakcoach.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "BreakCoach uses the camera to record short practice clips. Video is processed on your device and deleted after movement analysis.",
+        "NSMicrophoneUsageDescription": "Audio is not stored; the camera component may request microphone access during recording."
+      }
+    },
+    "android": {
+      "package": "com.breakcoach.app",
+      "permissions": [
+        "CAMERA"
+      ]
+    },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "BreakCoach records short practice clips that are analyzed on-device and then deleted."
+        }
+      ],
+      "expo-asset"
+    ],
+    "extra": {
+      "supabaseUrl": "",
+      "supabaseAnonKey": ""
+    }
+  }
+}
