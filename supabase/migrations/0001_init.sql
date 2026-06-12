@@ -68,16 +68,21 @@ alter table motion_frames enable row level security;
 -- (auth.uid() is uuid; cast to text to match our text keys)
 
 -- profiles: a user sees/edits their own row; a guardian can read their child's.
+drop policy if exists profiles_self_select on profiles;
 create policy profiles_self_select on profiles
   for select using (auth.uid()::text = id or auth.uid()::text = guardian_id);
-create policy profiles_self_upsert on profiles
+drop policy if exists profiles_self_insert on profiles;
+create policy profiles_self_insert on profiles
   for insert with check (auth.uid()::text = id);
+drop policy if exists profiles_self_update on profiles;
 create policy profiles_self_update on profiles
-  for update using (auth.uid()::text = id);
+  for update using (auth.uid()::text = id) with check (auth.uid()::text = id);
 
 -- sessions: owner full access; guardian read-only for their child's sessions.
+drop policy if exists sessions_owner_all on motion_sessions;
 create policy sessions_owner_all on motion_sessions
   for all using (auth.uid()::text = user_id) with check (auth.uid()::text = user_id);
+drop policy if exists sessions_guardian_read on motion_sessions;
 create policy sessions_guardian_read on motion_sessions
   for select using (
     exists (
@@ -87,8 +92,10 @@ create policy sessions_guardian_read on motion_sessions
   );
 
 -- frames: same ownership + guardian read.
+drop policy if exists frames_owner_all on motion_frames;
 create policy frames_owner_all on motion_frames
   for all using (auth.uid()::text = user_id) with check (auth.uid()::text = user_id);
+drop policy if exists frames_guardian_read on motion_frames;
 create policy frames_guardian_read on motion_frames
   for select using (
     exists (
@@ -99,4 +106,5 @@ create policy frames_guardian_read on motion_frames
 
 -- skills are public read-only content.
 alter table skills enable row level security;
+drop policy if exists skills_public_read on skills;
 create policy skills_public_read on skills for select using (true);

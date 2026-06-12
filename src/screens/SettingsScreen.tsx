@@ -18,7 +18,7 @@ const AGE_LABEL: Record<string, string> = {
 };
 
 export function SettingsScreen() {
-  const { profile, setRawVideoStorage, deleteMyData, signOut } = useAuth();
+  const { profile, cloudEnabled, setRawVideoStorage, deleteMyData, signOut } = useAuth();
   const [busy, setBusy] = useState(false);
 
   if (!profile) return null;
@@ -81,6 +81,13 @@ export function SettingsScreen() {
           <Pill
             label={profile.consentStatus.replace('_', ' ')}
             color={profile.consentStatus === 'granted' ? colors.good : colors.textDim}
+          />
+        </Row>
+        <Row style={{ justifyContent: 'space-between' }}>
+          <P dim>Cloud sync</P>
+          <Pill
+            label={cloudEnabled ? 'on' : 'local only'}
+            color={cloudEnabled ? colors.good : colors.textDim}
           />
         </Row>
       </Card>

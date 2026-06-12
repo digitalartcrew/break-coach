@@ -9,7 +9,6 @@ import { poseEstimator } from '@/lib/pose';
 import { enforceVideoRetention } from '@/lib/storage/privacy';
 import { saveSession } from '@/lib/storage/motionStore';
 import { scoreSession } from '@/lib/scoring/ScoringEngine';
-import { isSupabaseConfigured } from '@/config/supabase';
 import { useAuth } from '@/state/auth';
 import { uid } from '@/lib/id';
 import { Button, Card, H2, P, Screen } from '@/components/ui';
@@ -25,7 +24,7 @@ export function RecordScreen() {
   const nav = useNavigation<Nav>();
   const { params } = useRoute<Rt>();
   const skill = getSkill(params.skillId);
-  const { profile } = useAuth();
+  const { profile, cloudEnabled } = useAuth();
 
   const cameraRef = useRef<CameraView>(null);
   const [permission, requestPermission] = useCameraPermissions();
@@ -70,7 +69,7 @@ export function RecordScreen() {
         feedbackSummary: score?.summary ?? null,
         frames: result.frames,
       };
-      await saveSession(session, { sync: isSupabaseConfigured });
+      await saveSession(session, { sync: cloudEnabled });
       // 5) Show results
       nav.replace('Result', { sessionId: id });
     } catch (e) {

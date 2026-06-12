@@ -1,5 +1,5 @@
 import React, { useMemo, useRef } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { Text, View, StyleSheet } from 'react-native';
 import { Canvas, useFrame } from '@react-three/fiber/native';
 import * as THREE from 'three';
 import { ALL_JOINTS, BONES, Joint, MotionFrame, Pose } from '@/types/motion';
@@ -14,6 +14,28 @@ import { colors } from '@/theme';
  *
  * Optionally overlays a faded reference skeleton ("ghost") for comparison.
  */
+/**
+ * expo-gl returns `null`/`undefined` from getShaderInfoLog / getProgramInfoLog,
+ * but three.js calls `.trim()` on the result during shader compilation. On the
+ * iOS Simulator (where expo-gl's GL is flaky) that throws
+ * "Cannot read property 'trim' of undefined" and crashes the replay. Wrap those
+ * context methods so they always return a string. Safe no-op on real devices.
+ */
+function hardenGLContext(renderer: THREE.WebGLRenderer) {
+  try {
+    const gl = renderer.getContext() as WebGLRenderingContext;
+    const patch = <K extends 'getShaderInfoLog' | 'getProgramInfoLog'>(name: K) => {
+      const orig = gl[name]?.bind(gl);
+      if (!orig) return;
+      gl[name] = (target: WebGLShader & WebGLProgram) => orig(target) ?? '';
+    };
+    patch('getShaderInfoLog');
+    patch('getProgramInfoLog');
+  } catch {
+    /* best-effort */
+  }
+}
+
 export function SkeletonReplay({
   frames,
   reference,
@@ -25,17 +47,50 @@ export function SkeletonReplay({
 }) {
   return (
     <View style={[styles.canvasWrap, { height }]}>
-      <Canvas camera={{ position: [0, 0.2, 3.6], fov: 50 }}>
-        <ambientLight intensity={0.8} />
-        <directionalLight position={[2, 4, 3]} intensity={0.9} />
-        <Floor />
-        {reference && reference.length > 1 && (
-          <Figure frames={reference} color={colors.textDim} opacity={0.35} />
-        )}
-        <Figure frames={frames} color={colors.primary} opacity={1} />
-      </Canvas>
+      <GLErrorBoundary>
+        <Canvas
+          camera={{ position: [0, 0.2, 3.6], fov: 50 }}
+          onCreated={(state) => hardenGLContext(state.gl)}
+        >
+          <ambientLight intensity={0.8} />
+          <directionalLight position={[2, 4, 3]} intensity={0.9} />
+          <Floor />
+          {reference && reference.length > 1 && (
+            <Figure frames={reference} color={colors.textDim} opacity={0.35} />
+          )}
+          <Figure frames={frames} color={colors.primary} opacity={1} />
+        </Canvas>
+      </GLErrorBoundary>
     </View>
   );
+}
+
+/** Degrade gracefully if GL/three fails (e.g. on a flaky simulator GL stack). */
+class GLErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { failed: boolean }
+> {
+  state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  componentDidCatch(error: unknown) {
+    console.warn('[SkeletonReplay] 3D render unavailable:', error);
+  }
+  render() {
+    if (this.state.failed) {
+      return (
+        <View style={styles.fallback}>
+          <Text style={styles.fallbackEmoji}>🦴</Text>
+          <Text style={styles.fallbackText}>
+            3D replay isn’t available on this device. Your motion data and
+            coaching are still saved below.
+          </Text>
+        </View>
+      );
+    }
+    return this.props.children;
+  }
 }
 
 function Floor() {
@@ -146,4 +201,13 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     backgroundColor: '#0e0e16',
   },
+  fallback: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+    gap: 8,
+  },
+  fallbackEmoji: { fontSize: 34 },
+  fallbackText: { color: colors.textDim, fontSize: 13, textAlign: 'center', lineHeight: 18 },
 });

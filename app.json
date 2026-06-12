@@ -19,13 +19,16 @@
       "bundleIdentifier": "com.breakcoach.app",
       "infoPlist": {
         "NSCameraUsageDescription": "BreakCoach uses the camera to record short practice clips. Video is processed on your device and deleted after movement analysis.",
-        "NSMicrophoneUsageDescription": "Audio is not stored; the camera component may request microphone access during recording."
+        "NSMicrophoneUsageDescription": "Audio is not stored; the camera component may request microphone access during recording.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
       "package": "com.breakcoach.app",
       "permissions": [
-        "CAMERA"
+        "CAMERA",
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
       ]
     },
     "plugins": [
@@ -39,7 +42,10 @@
     ],
     "extra": {
       "supabaseUrl": "",
-      "supabaseAnonKey": ""
+      "supabaseAnonKey": "",
+      "eas": {
+        "projectId": "58d0a2c7-28dd-47d7-96e5-179b78aedb27"
+      }
     }
   }
 }
