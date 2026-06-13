@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "scheme": "breakcoach",
     "userInterfaceStyle": "dark",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "splash": {
       "resizeMode": "contain",
       "backgroundColor": "#0b0b12"
